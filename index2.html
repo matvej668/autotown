@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    "!function() {
+        "use strict";
+    
+
+        if (window.location.href === "https://autotown.lv/index.php?route=information/information&information_id=9") {
+            return;
+        }
+    
+        console.log("Eitem");
+        if (typeof Eitem === "function" || window.eitemInProccess === true) return;
+    
+        window.eitemInProccess = true;
+    
+        let e = document.currentScript.getAttribute("src").split("?");
+    
+        function t(url, onLoadCallback) {
+            let script = document.createElement("script");
+            script.src = url;
+            script.onload = onLoadCallback;
+            document.head.appendChild(script);
+        }
+    
+        window.eitemBaseUrl = e[0];
+    
+        (function eitemRequest(url, callback) {
+            let xhr = new XMLHttpRequest();
+            xhr.open("GET", url, true);
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4) {
+                    callback(xhr.responseText);
+                }
+            };
+            xhr.send();
+        })(
+            window.eitemBaseUrl +
+            "/init?e-url=" + encodeURIComponent(window.location.href.replace(/\\/g, "")) +
+            "&e-lang=" + document.documentElement.lang +
+            "&" + (e[1] || ""),
+    
+            function(responseText, error) {
+                if (error || !responseText) {
+                    window.eitemInProccess = false;
+                    return;
+                }
+    
+                let json;
+                try {
+                    json = JSON.parse(responseText);
+                } catch (err) {
+                    window.eitemInProccess = false;
+                    return;
+                }
+    
+                if (!json.success) {
+                    window.eitemInProccess = false;
+                    return;
+                }
+    
+                window.eitemInitApi = json;
+    
+                let link = document.createElement("link");
+                link.rel = "stylesheet";
+                link.href = json.cssUrl;
+                document.head.appendChild(link);
+    
+                t(json.jQuery, function() {
+                    window.ejq = jQuery.noConflict(true);
+    
+                    t(json.jsUrl, function() {
+                        (function inlineScript(scriptContent) {
+                            let blob = new Blob([scriptContent], { type: "application/javascript" });
+                            let objectURL = URL.createObjectURL(blob);
+                            let script = document.createElement("script");
+                            script.src = objectURL;
+                            script.onload = () => URL.revokeObjectURL(objectURL);
+                            document.head.appendChild(script);
+                        })(json.jsInitScript);
+    
+                        window.eitemInProccess = false;
+                    });
+                });
+            }
+        );
+    }();
+    "
+</body>
+</html>
